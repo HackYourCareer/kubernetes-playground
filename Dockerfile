@@ -1,8 +1,15 @@
 FROM golang:latest as builder
-COPY app.go app.go
-RUN CGO_ENABLED=0 go build -o app app.go
 
-FROM scratch
-COPY --from=builder /go/app .
+ARG APP=app
+WORKDIR /$APP
+
+COPY $APP.go app.go
+COPY go.mod go.mod
+
+RUN go mod download
+RUN CGO_ENABLED=0 go build -o /app app.go
+
+FROM alpine:latest
+COPY --from=builder /app .
 
 ENTRYPOINT ["/app"]
